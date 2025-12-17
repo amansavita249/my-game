@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Guess the Number Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #ff512f, #dd2476);
+      text-align: center;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+    .screen {
+      display: none;
+      padding: 40px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    .active {
+      display: block;
+    }
+    .game-box {
+      margin: 20px auto;
+      padding: 30px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 15px;
+      width: 550px;
+      box-shadow: 0 0 25px rgba(255,255,255,0.4);
+      animation: popUp 0.8s ease;
+    }
+    input, button {
+      padding: 15px;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 20px;
+    }
+    button {
+      background: #ff9800;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+    }
+    button:hover {
+      background: #e68900;
+      transform: scale(1.1);
+    }
+    #record {
+      margin-top: 20px;
+      font-size: 16px;
+      background: rgba(255,255,255,0.1);
+      padding: 12px;
+      border-radius: 8px;
+    }
+    #enteredNumber {
+      font-size: 22px;
+      margin-top: 10px;
+      color: #ffeb3b;
+      animation: glow 1s infinite alternate;
+    }
+    #message {
+      font-size: 24px;
+      margin-top: 15px;
+      animation: drop 0.6s ease;
+    }
+    @keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
+    @keyframes popUp { from {transform: scale(0.8);} to {transform: scale(1);} }
+    @keyframes glow { from {text-shadow: 0 0 5px #fff;} to {text-shadow: 0 0 20px #ffeb3b;} }
+    @keyframes drop { from {transform: translateY(-20px); opacity:0;} to {transform: translateY(0); opacity:1;} }
+  </style>
+</head>
+<body>
+  <!-- Name Screen -->
+  <div id="nameScreen" class="screen active">
+    <h1 style="font-size:40px;">🎮 Welcome to Guess the Number</h1>
+    <p style="font-size:20px;">Enter your name to start (अपना नाम डालें)</p>
+    <input type="text" id="playerName" placeholder="Your Name">
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <!-- Game Screen -->
+  <div id="gameScreen" class="screen">
+    <div class="game-box">
+      <h2 id="welcome"></h2>
+      <p id="levelInfo">Level: 1</p>
+      <p style="font-size:20px;">Guess a number between <span id="range">1 and 100</span></p>
+      <input type="number" id="guessInput">
+      <button onclick="checkGuess()">Submit Guess</button>
+      <p id="enteredNumber"></p>
+      <p id="message"></p>
+      <p id="timer">Time: 0s</p>
+      <div id="record"></div>
+    </div>
+  </div>
+
+<script>
+let number, attempts, level = 1, player, maxGuesses = 10, startTime;
+let totalLevelsCleared = 0;
+let timerInterval;
+
+function startGame() {
+  player = document.getElementById("playerName").value;
+  if(player === "") {
+    alert("Please enter your name / कृपया नाम डालें");
+    return;
+  }
+  document.getElementById("nameScreen").classList.remove("active");
+  document.getElementById("gameScreen").classList.add("active");
+  document.getElementById("welcome").innerText = `Welcome ${player}! Let's play 🎉`;
+  resetLevel();
+}
+
+function resetLevel() {
+  attempts = 0;
+  startTime = Date.now();
+  clearInterval(timerInterval);
+  number = Math.floor(Math.random() * 100) + 1;
+  document.getElementById("range").innerText = `1 and 100`;
+  document.getElementById("levelInfo").innerText = `Level: ${level}`;
+  document.getElementById("message").innerText = "";
+  document.getElementById("enteredNumber").innerText = "";
+  document.getElementById("record").innerText = `Guesses used: 0 | Left: ${maxGuesses} | Levels cleared: ${totalLevelsCleared}`;
+  updateTimer();
+
+  // Allow Enter key to submit
+  document.getElementById("guessInput").addEventListener("keyup", function(event) {
+    if(event.key === "Enter") {
+      checkGuess();
+    }
+  });
+}
+
+function updateTimer() {
+  timerInterval = setInterval(() => {
+    let elapsed = Math.floor((Date.now() - startTime) / 1000);
+    document.getElementById("timer").innerText = `Time: ${elapsed}s`;
+  }, 1000);
+}
+
+function checkGuess() {
+  let guessInput = document.getElementById("guessInput");
+  let guess = parseInt(guessInput.value);
+  if(isNaN(guess)) return;
+
+  attempts++;
+  let left = maxGuesses - attempts;
+  document.getElementById("enteredNumber").innerText = `You entered: ${guess}`;
+  document.getElementById("record").innerText = `Guesses used: ${attempts} | Left: ${left} | Levels cleared: ${totalLevelsCleared}`;
+  
+  if(guess > number) {
+    document.getElementById("message").innerText = "⬇ Lower number please!";
+  } else if(guess < number) {
+    document.getElementById("message").innerText = "⬆ Higher number please!";
+  } else {
+    totalLevelsCleared++;
+    document.getElementById("message").innerText = `🎉 Correct! You cleared Level ${level}.`;
+    level++;
+    setTimeout(resetLevel, 2000);
+    return;
+  }
+
+  if(attempts >= maxGuesses) {
+    document.getElementById("message").innerText = "❌ Out of guesses! Restarting game...";
+    setTimeout(() => {
+      level = 1;
+      totalLevelsCleared = 0;
+      resetLevel();
+    }, 3000);
+  }
+
+  // 🔥 Clear the input and refocus for next guess
+  guessInput.value = "";
+  guessInput.focus();
+}
+</script>
+</body>
+</html>
